@@ -38,6 +38,7 @@ function hydrateStatic() {
 const PRODUCTS = [
   {
     id: "abide-tee",
+    line: "women",
     name: "The Abide Tee",
     color: "Cream",
     price: 34,
@@ -47,6 +48,7 @@ const PRODUCTS = [
   },
   {
     id: "bloom-hoodie",
+    line: "women",
     name: "The Bloom Hoodie",
     color: "Black",
     price: 64,
@@ -56,6 +58,7 @@ const PRODUCTS = [
   },
   {
     id: "rooted-crewneck",
+    line: "women",
     name: "The Rooted Crewneck",
     color: "Oatmeal",
     price: 54,
@@ -65,6 +68,7 @@ const PRODUCTS = [
   },
   {
     id: "grace-tote",
+    line: "women",
     name: "The Grace Tote",
     color: "Natural Canvas",
     price: 28,
@@ -74,6 +78,7 @@ const PRODUCTS = [
   },
   {
     id: "abide-cap",
+    line: "women",
     name: "The Abide Cap",
     color: "Cream",
     price: 28,
@@ -83,6 +88,7 @@ const PRODUCTS = [
   },
   {
     id: "devotional-journal",
+    line: "women",
     name: "The Devotional Journal",
     color: "Cream Linen",
     price: 24,
@@ -92,12 +98,53 @@ const PRODUCTS = [
   },
   {
     id: "welcome-gift-set",
+    line: "women",
     name: "The Welcome Gift Set",
     color: "Gift-Ready",
     price: 68,
     img: "assets/abide-bloom-giftbags-mockup.webp",
     desc: "The Abide Tee in cream, folded into our signature black & cream gift bag with tissue and hang tag. The easiest, most meaningful gift you'll ever give.",
     sizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+  },
+  {
+    id: "abide-tee-mens",
+    line: "men",
+    name: "The Abide Tee",
+    color: "Black",
+    price: 34,
+    img: "assets/abide-bloom-mens-tee-mockup.webp",
+    desc: "The men's cut of our signature. The intertwined AB monogram in warm cream on heavyweight black cotton — built for the long run.",
+    sizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+  },
+  {
+    id: "rooted-hoodie-mens",
+    line: "men",
+    name: "The Rooted Hoodie",
+    color: "Charcoal",
+    price: 64,
+    img: "assets/abide-bloom-mens-hoodie-mockup.webp",
+    desc: "A men's heavyweight pullover in charcoal with the cream AB monogram. Quiet confidence for cold mornings and late nights.",
+    sizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+  },
+  {
+    id: "stand-firm-crewneck",
+    line: "men",
+    name: "The Stand Firm Crewneck",
+    color: "Sand",
+    price: 54,
+    img: "assets/abide-bloom-mens-crewneck-mockup.webp",
+    desc: "The men's crewneck in warm sand with the monogram in deep espresso. Stand firm — in faith, in family, in the everyday.",
+    sizes: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+  },
+  {
+    id: "abide-cap-mens",
+    line: "men",
+    name: "The Abide Cap",
+    color: "Black",
+    price: 28,
+    img: "assets/abide-bloom-mens-cap-mockup.webp",
+    desc: "A black six-panel cap with the AB monogram embroidered in cream. Simple, sharp, rooted.",
+    sizes: null,
   },
 ];
 
@@ -120,9 +167,11 @@ let cart = loadCart();
 
 /* ---------- product grid ---------- */
 const grid = document.getElementById("product-grid");
+let shopFilter = "all";
 
 function renderProducts() {
-  grid.innerHTML = PRODUCTS.map((p) => `
+  const list = PRODUCTS.filter((p) => shopFilter === "all" || p.line === shopFilter);
+  grid.innerHTML = list.map((p) => `
     <article class="product-card reveal" data-id="${p.id}" tabindex="0" role="button" aria-label="View ${p.name}">
       <div class="product-media"><img data-b64="${p.img}.b64" src="${__PLACEHOLDER}" alt="${p.name} — ${p.color}" loading="lazy" /></div>
       <div class="product-info">
@@ -155,6 +204,14 @@ function renderProducts() {
   hydrate(grid);
   observeReveals();
 }
+
+document.querySelectorAll("[data-filter]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    shopFilter = btn.dataset.filter;
+    document.querySelectorAll("[data-filter]").forEach((b) => b.classList.toggle("active", b === btn));
+    renderProducts();
+  });
+});
 
 /* ---------- quick view ---------- */
 const modal = document.getElementById("quick-view");
