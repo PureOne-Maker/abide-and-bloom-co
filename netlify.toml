@@ -1,0 +1,7 @@
+[build]
+  publish = "."
+
+# Abide & Bloom Co. — static storefront.
+# The launch-list form below is captured by Netlify Forms (see the
+# <form name="launch-list"> in index.html); submissions appear under
+# Site settings > Forms once deployed.
