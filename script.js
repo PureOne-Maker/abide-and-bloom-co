@@ -337,6 +337,23 @@ document.getElementById("launch-form").addEventListener("submit", function (e) {
     });
 });
 
+/* ---------- announcement dismiss ---------- */
+(function () {
+  const bar = document.getElementById("announce");
+  const btn = document.getElementById("announce-close");
+  if (!bar || !btn) return;
+  try {
+    if (localStorage.getItem("abide_announce_dismissed") === "1") {
+      bar.style.display = "none";
+      return;
+    }
+  } catch (e) {}
+  btn.addEventListener("click", () => {
+    bar.style.display = "none";
+    try { localStorage.setItem("abide_announce_dismissed", "1"); } catch (e) {}
+  });
+})();
+
 /* ---------- nav / header ---------- */
 const header = document.getElementById("site-header");
 window.addEventListener("scroll", () => {
