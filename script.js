@@ -1,5 +1,40 @@
 /* Abide & Bloom Co. — storefront logic */
 
+/* ---------- image delivery ----------
+   Product art lives in the repo as base64 text files (*.webp.b64) because
+   binary upload isn't available to this build pipeline. hydrate() swaps the
+   placeholders for the real images at runtime. Nothing else changes. */
+const __PLACEHOLDER = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+const __imgCache = {};
+function __loadImage(key) {
+  if (__imgCache[key]) return Promise.resolve(__imgCache[key]);
+  return fetch(key)
+    .then((r) => { if (!r.ok) throw new Error("img"); return r.text(); })
+    .then((t) => (__imgCache[key] = "data:image/webp;base64," + t.trim()));
+}
+function hydrate(root) {
+  const scope = root || document;
+  Array.from(scope.querySelectorAll("img[data-b64]")).forEach((img) => {
+    const key = img.getAttribute("data-b64");
+    __loadImage(key).then((uri) => { img.src = uri; }).catch(() => {});
+  });
+}
+function hydrateStatic() {
+  // index.html ships <img src="assets/*.webp"> — reroute through .b64
+  document.querySelectorAll('img[src^="assets/"][src$=".webp"]').forEach((img) => {
+    img.setAttribute("data-b64", img.getAttribute("src") + ".b64");
+    img.src = __PLACEHOLDER;
+  });
+  const fav = document.querySelector('link[rel="icon"]');
+  if (fav) {
+    const href = fav.getAttribute("href");
+    if (href && href.endsWith(".webp")) {
+      __loadImage(href + ".b64").then((uri) => { fav.href = uri; }).catch(() => {});
+    }
+  }
+  hydrate(document);
+}
+
 const PRODUCTS = [
   {
     id: "abide-tee",
@@ -89,7 +124,7 @@ const grid = document.getElementById("product-grid");
 function renderProducts() {
   grid.innerHTML = PRODUCTS.map((p) => `
     <article class="product-card reveal" data-id="${p.id}" tabindex="0" role="button" aria-label="View ${p.name}">
-      <div class="product-media"><img src="${p.img}" alt="${p.name} — ${p.color}" loading="lazy" /></div>
+      <div class="product-media"><img data-b64="${p.img}.b64" src="${__PLACEHOLDER}" alt="${p.name} — ${p.color}" loading="lazy" /></div>
       <div class="product-info">
         <p class="product-color">${p.color}</p>
         <h3>${p.name}</h3>
@@ -117,6 +152,7 @@ function renderProducts() {
       addToCart(p.id, p.sizes ? p.sizes[2] : "One Size", 1);
     });
   });
+  hydrate(grid);
   observeReveals();
 }
 
@@ -128,8 +164,11 @@ function openQuickView(id) {
   qvProduct = PRODUCTS.find((p) => p.id === id);
   qvQty = 1;
   qvSize = qvProduct.sizes ? qvProduct.sizes[2] : "One Size";
-  document.getElementById("qv-img").src = qvProduct.img;
-  document.getElementById("qv-img").alt = qvProduct.name;
+  const qvImg = document.getElementById("qv-img");
+  qvImg.setAttribute("data-b64", qvProduct.img + ".b64");
+  qvImg.src = __PLACEHOLDER;
+  qvImg.alt = qvProduct.name;
+  hydrate(qvImg.parentElement);
   document.getElementById("qv-eyebrow").textContent = qvProduct.color;
   document.getElementById("qv-name").textContent = qvProduct.name;
   document.getElementById("qv-price").textContent = money(qvProduct.price);
@@ -214,7 +253,7 @@ function renderCart() {
     if (!p) return "";
     return `
       <div class="cart-item" data-key="${key}">
-        <img src="${p.img}" alt="${p.name}" />
+        <img data-b64="${p.img}.b64" src="${__PLACEHOLDER}" alt="${p.name}" />
         <div>
           <p class="ci-name">${p.name}</p>
           <p class="ci-meta">${it.size} · ${money(p.price)}</p>
@@ -242,6 +281,7 @@ function renderCart() {
     }));
   itemsEl.querySelectorAll("[data-remove]").forEach((b) =>
     b.addEventListener("click", () => { delete cart[b.dataset.remove]; saveCart(cart); renderCart(); }));
+  hydrate(itemsEl);
 }
 function openCart() {
   renderCart();
@@ -337,4 +377,5 @@ document.addEventListener("keydown", (e) => {
 });
 renderProducts();
 renderCart();
+hydrateStatic();
 observeReveals();
